@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "vite-ts-react-test",
+  "version": "1.0",
+  "description": "",
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Click to open panel"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "permissions": ["scripting", "tabs", "sidePanel"],
+  "host_permissions": ["https://*/*", "http://*/*"]
+}

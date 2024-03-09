@@ -1,19 +1,22 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useEffect, useState } from "react";
 import "./App.css";
-
-interface SeasonStats {
-  season: string;
-  points: number;
-  assists: number;
-  rebounds: number;
-}
+import { LineChart } from "@tremor/react";
 
 function App() {
-  const [careerStats, setCareerStats] = useState<SeasonStats[] | null>(null);
+  interface ChartData {
+    date: string;
+    points: number;
+    assists: number;
+    rebounds: number;
+  }
 
-  const showCareerStats = async () => {
+  const [careerStatsChartData, setCareerStatsChartData] = useState<
+    ChartData[] | null
+  >(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const getCareerStats = async () => {
+    setIsLoading(true);
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     chrome.scripting
@@ -23,7 +26,7 @@ function App() {
           const table = document.querySelector("#per_game");
           const headerRow = table?.querySelector("thead tr");
           const bodyRows = table?.querySelectorAll("tbody tr:not(.thead)");
-          let statsArray: SeasonStats[] = [];
+          let chartDataArray: ChartData[] = [];
 
           const getColumnIndex = (columnName: string) => {
             return Array.from(headerRow?.children || []).findIndex(
@@ -37,7 +40,7 @@ function App() {
           const reboundsIndex = getColumnIndex("TRB") + 1;
 
           bodyRows?.forEach((row) => {
-            const season =
+            const date =
               row.querySelector('th[data-stat="season"]')?.textContent || "";
             const pointsElement = row.querySelector(
               `td:nth-child(${pointsIndex})`
@@ -59,53 +62,49 @@ function App() {
               ? parseFloat(reboundsElement.textContent || "0")
               : 0;
 
-            statsArray.push({ season, points, assists, rebounds });
+            chartDataArray.push({ date, points, assists, rebounds });
           });
 
-          return statsArray;
+          return chartDataArray;
         },
       })
       .then((results) => {
         // Update state with the fetched career statistics
-        const careerStats = (results && results[0]?.result) || null;
-        setCareerStats(careerStats);
+        const careerStatsChartData = (results && results[0]?.result) || null;
+
+        setCareerStatsChartData(careerStatsChartData);
+        setIsLoading(false);
       });
   };
 
+  useEffect(() => {
+    if (careerStatsChartData) {
+      console.log(careerStatsChartData);
+    }
+  }, [careerStatsChartData]);
+
+  const dataFormatter = (number: number) =>
+    `${Intl.NumberFormat("us").format(number).toString()}`;
+
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={showCareerStats}>Show Career Stats</button>
-        {careerStats !== null && (
-          <>
-            <h2>Career Stats</h2>
-            <ul>
-              {careerStats.map((stat, index) => (
-                <li key={index}>
-                  {stat.season} - Points: {stat.points}, Assists: {stat.assists}
-                  , Rebounds: {stat.rebounds}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="card">
+      <button onClick={getCareerStats}>Show Career Stats on Chart</button>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        careerStatsChartData !== null && (
+          <LineChart
+            className="h-96"
+            data={careerStatsChartData}
+            index="date"
+            categories={["Points", "Assists", "Rebounds"]}
+            colors={["indigo", "rose", "green"]}
+            valueFormatter={dataFormatter}
+            yAxisWidth={60}
+          />
+        )
+      )}
+    </div>
   );
 }
 

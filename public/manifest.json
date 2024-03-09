@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "vite-ts-react-test",
+  "name": "Visual Stats",
   "version": "1.0",
   "description": "",
   "background": {

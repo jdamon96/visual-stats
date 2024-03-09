@@ -9,6 +9,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import PlayerList from "./components/PlayerList";
+import { Card } from "./components/ui/card";
 
 function App() {
   interface ChartData {
@@ -92,39 +94,49 @@ function App() {
   }, [careerStatsChartData]);
 
   return (
-    <div className="card">
-      <button onClick={getCareerStats}>Show Career Stats on Chart</button>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        careerStatsChartData !== null && (
-          <LineChart
-            width={500}
-            height={300}
-            data={careerStatsChartData}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="points"
-              stroke="#8884d8"
-              activeDot={{ r: 8 }}
-            />
-            <Line type="monotone" dataKey="assists" stroke="#82ca9d" />
-            <Line type="monotone" dataKey="rebounds" stroke="#82ca9d" />
-          </LineChart>
-        )
-      )}
+    <div className="">
+      <h1 className="text-3xl font-bold mb-6">Visual Stats</h1>
+      {/* <button onClick={getCareerStats}>Show Career Stats on Chart</button> */}
+      <div className="flex flex-col space-y-4">
+        <Card className="flex items-center justify-center" title="Career Stats">
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : careerStatsChartData !== null ? (
+            <LineChart
+              width={500}
+              height={300}
+              data={careerStatsChartData}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="points"
+                stroke="#8884d8"
+                activeDot={{ r: 8 }}
+              />
+              <Line type="monotone" dataKey="assists" stroke="#82ca9d" />
+              <Line type="monotone" dataKey="rebounds" stroke="#82ca9d" />
+            </LineChart>
+          ) : (
+            <div className="w-[500px] h-[300px] flex justify-center items-center">
+              Add a player to visualize their stats
+            </div>
+          )}
+        </Card>
+        <Card>
+          <PlayerList />
+        </Card>
+      </div>
     </div>
   );
 }

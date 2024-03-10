@@ -11,6 +11,8 @@ import {
 } from "recharts";
 import PlayerList from "./components/PlayerList";
 import { Card } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface ChartData {
   date: string;
@@ -30,6 +32,7 @@ function App() {
     PlayerStats[] | null
   >(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedStat, setSelectedStat] = useState<string>("points");
 
   const getCareerStats = async () => {
     setIsLoading(true);
@@ -131,52 +134,70 @@ function App() {
   }, []);
 
   return (
-    <div className="">
+    <div className="p-4">
       <h1 className="text-3xl font-bold mb-6">Visual Stats</h1>
-      <div className="flex flex-col space-y-4">
-        <Card
-          className="flex items-center justify-center p-4"
-          title="Career Stats"
-        >
-          {isLoading ? (
-            <p>Loading...</p>
-          ) : playerCareerStatsData !== null ? (
-            playerCareerStatsData.map((playerStats) => (
-              <div key={playerStats.name}>
-                {/* <h2>{playerStats.name}</h2>
-                <img src={playerStats.image} alt={playerStats.name} /> */}
-                <LineChart
-                  width={500}
-                  height={300}
-                  data={playerStats.stats}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="points"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line type="monotone" dataKey="assists" stroke="#82ca9d" />
-                  <Line type="monotone" dataKey="rebounds" stroke="#82ca9d" />
-                </LineChart>
+      <div className="flex flex-col space-y-6">
+        <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
+          <div className="flex items-center justify-center">
+            {isLoading ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : playerCareerStatsData !== null ? (
+              playerCareerStatsData.map((playerStats) => (
+                <div key={playerStats.name}>
+                  <h2 className="text-xl font-semibold mb-4">
+                    {"Career " + selectedStat + " per game"}
+                  </h2>
+                  <LineChart
+                    width={500}
+                    height={300}
+                    data={playerStats.stats}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={[0, 40]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey={selectedStat}
+                      stroke="#8884d8"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </div>
+              ))
+            ) : (
+              <div className="w-[500px] h-[300px] flex justify-center items-center">
+                Add a player to visualize their stats
               </div>
-            ))
-          ) : (
-            <div className="w-[500px] h-[300px] flex justify-center items-center">
-              Add a player to visualize their stats
-            </div>
-          )}
+            )}
+          </div>
+          <div className="flex items-center justify-center space-x-2">
+            <Button
+              onClick={() => setSelectedStat("points")}
+              variant={"secondary"}
+            >
+              Points
+            </Button>
+            <Button
+              onClick={() => setSelectedStat("assists")}
+              variant={"secondary"}
+            >
+              Assists
+            </Button>
+            <Button
+              onClick={() => setSelectedStat("rebounds")}
+              variant={"secondary"}
+            >
+              Rebounds
+            </Button>
+          </div>
         </Card>
         <Card>
           <PlayerList playerCareerStatsData={playerCareerStatsData} />

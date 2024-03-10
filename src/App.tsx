@@ -143,7 +143,7 @@ function App() {
             ) : playerCareerStatsData !== null ? (
               playerCareerStatsData.map((playerStats) => (
                 <div key={playerStats.name}>
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
                     {"Career " + selectedStat + " per game"}
                   </h2>
                   <LineChart
@@ -181,18 +181,23 @@ function App() {
             <Button
               onClick={() => setSelectedStat("points")}
               variant={"secondary"}
+              className={
+                selectedStat === "points" ? "bg-blue-500 text-white" : ""
+              }
             >
               Points
             </Button>
             <Button
               onClick={() => setSelectedStat("assists")}
               variant={"secondary"}
+              className={selectedStat === "assists" ? "bg-blue-500" : ""}
             >
               Assists
             </Button>
             <Button
               onClick={() => setSelectedStat("rebounds")}
               variant={"secondary"}
+              className={selectedStat === "rebounds" ? "bg-blue-500" : ""}
             >
               Rebounds
             </Button>

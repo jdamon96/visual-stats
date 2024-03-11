@@ -144,18 +144,6 @@ function App() {
 
   useEffect(() => {
     getCareerStats();
-    const handleMessage = (
-      request: any,
-      _: chrome.runtime.MessageSender,
-      __: (response?: any) => void
-    ): void => {
-      if (request.action === "fetchPlayerStats") {
-        getCareerStats();
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(handleMessage);
-    return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
   useEffect(() => {
@@ -168,7 +156,10 @@ function App() {
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl font-bold mb-6">Visual Stats</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold mb-6">Visual Stats</h1>
+        <Button onClick={getCareerStats}>Add Players Stats</Button>
+      </div>
       <div className="flex flex-col space-y-6">
         <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
           <div className="flex items-center justify-center">

@@ -30,10 +30,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const playerPageRegex =
       /https:\/\/www\.basketball-reference\.com\/players\/[a-z]\/[a-z]+[0-9]+\.html/;
     if (playerPageRegex.test(url.href)) {
-      chrome.tabs.sendMessage(tabId, {
-        action: "fetchPlayerStats",
-        url: url.href,
-      });
+      // chrome.tabs.sendMessage(tabId, {
+      //   action: "fetchPlayerStats",
+      //   url: url.href,
+      // });
     }
   }
 });

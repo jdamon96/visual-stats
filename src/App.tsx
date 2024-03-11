@@ -132,11 +132,18 @@ function App() {
           let allPlayerStats = allPlayerStatsObj.allPlayerStats
             ? allPlayerStatsObj.allPlayerStats
             : [];
-          allPlayerStats.push(playerStats);
 
-          await chrome.storage.local.set({ allPlayerStats });
+          // Check if player already exists in the array
+          const playerExists = allPlayerStats.some(
+            (player: PlayerStats) => player.name === playerStats.name
+          );
 
-          setPlayerCareerStatsData(allPlayerStats);
+          // Only add player if they don't already exist in the array
+          if (!playerExists) {
+            allPlayerStats.push(playerStats);
+            await chrome.storage.local.set({ allPlayerStats });
+            setPlayerCareerStatsData(allPlayerStats);
+          }
         }
         setIsLoading(false);
       });

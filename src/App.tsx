@@ -48,48 +48,69 @@ function App() {
       .executeScript({
         target: { tabId: tab.id! },
         func: () => {
-          const playerName =
-            document.querySelector("div#meta h1 span")?.textContent || "";
-          const playerImage =
-            document.querySelector(".media-item img")?.getAttribute("src") ||
-            "";
-          const table = document.querySelector("#per_game");
-          const headerRow = table?.querySelector("thead tr");
-          const bodyRows = table?.querySelectorAll("tbody tr:not(.thead)");
-          let chartDataArray: ChartData[] = [];
+          const getPlayerName = () => {
+            return (
+              document.querySelector("div#meta h1 span")?.textContent || ""
+            );
+          };
 
-          const getColumnIndex = (columnName: string) => {
+          const getPlayerImage = () => {
+            return (
+              document.querySelector(".media-item img")?.getAttribute("src") ||
+              ""
+            );
+          };
+
+          const getTable = () => {
+            return document.querySelector("#per_game");
+          };
+
+          const getHeaderRow = (table: Element | null) => {
+            return table?.querySelector("thead tr");
+          };
+
+          const getBodyRows = (table: Element | null) => {
+            return table?.querySelectorAll("tbody tr:not(.thead)");
+          };
+
+          const getColumnIndex = (
+            columnName: string,
+            headerRow: Element | null
+          ) => {
             return Array.from(headerRow?.children || []).findIndex(
               (th) => th.textContent === columnName
             );
           };
 
-          const pointsIndex = getColumnIndex("PTS") + 1;
-          const assistsIndex = getColumnIndex("AST") + 1;
-          const reboundsIndex = getColumnIndex("TRB") + 1;
+          const getStatElement = (row: Element, index: number) => {
+            return row.querySelector(`td:nth-child(${index})`);
+          };
+
+          const getStatValue = (element: Element | null) => {
+            return element ? parseFloat(element.textContent || "0") : 0;
+          };
+
+          const playerName = getPlayerName();
+          const playerImage = getPlayerImage();
+          const table = getTable();
+          const headerRow = getHeaderRow(table) || null;
+          const bodyRows = getBodyRows(table);
+          let chartDataArray: ChartData[] = [];
+
+          const pointsIndex = getColumnIndex("PTS", headerRow) + 1;
+          const assistsIndex = getColumnIndex("AST", headerRow) + 1;
+          const reboundsIndex = getColumnIndex("TRB", headerRow) + 1;
 
           bodyRows?.forEach((row) => {
             const date =
               row.querySelector('th[data-stat="season"]')?.textContent || "";
-            const pointsElement = row.querySelector(
-              `td:nth-child(${pointsIndex})`
-            );
-            const assistsElement = row.querySelector(
-              `td:nth-child(${assistsIndex})`
-            );
-            const reboundsElement = row.querySelector(
-              `td:nth-child(${reboundsIndex})`
-            );
+            const pointsElement = getStatElement(row, pointsIndex);
+            const assistsElement = getStatElement(row, assistsIndex);
+            const reboundsElement = getStatElement(row, reboundsIndex);
 
-            const points = pointsElement
-              ? parseFloat(pointsElement.textContent || "0")
-              : 0;
-            const assists = assistsElement
-              ? parseFloat(assistsElement.textContent || "0")
-              : 0;
-            const rebounds = reboundsElement
-              ? parseFloat(reboundsElement.textContent || "0")
-              : 0;
+            const points = getStatValue(pointsElement);
+            const assists = getStatValue(assistsElement);
+            const rebounds = getStatValue(reboundsElement);
 
             chartDataArray.push({ date, points, assists, rebounds });
           });

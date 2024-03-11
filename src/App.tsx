@@ -144,6 +144,18 @@ function App() {
 
   useEffect(() => {
     getCareerStats();
+    const handleMessage = (
+      request: any,
+      _: chrome.runtime.MessageSender,
+      __: (response?: any) => void
+    ): void => {
+      if (request.action === "fetchPlayerStats") {
+        getCareerStats();
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
   useEffect(() => {
@@ -152,6 +164,7 @@ function App() {
       setPlayerCareerStatsData(result.allPlayerStats);
     });
   }, []);
+  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#6a5acd"]; // Add more colors if needed
 
   return (
     <div className="p-4">
@@ -162,36 +175,38 @@ function App() {
             {isLoading ? (
               <Loader2 className="h-8 w-8 animate-spin" />
             ) : playerCareerStatsData !== null ? (
-              playerCareerStatsData.map((playerStats) => (
-                <div key={playerStats.name}>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
-                    {"Career " + selectedStat + " per game"}
-                  </h2>
-                  <LineChart
-                    width={500}
-                    height={300}
-                    data={playerStats.stats}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={[0, 40]} />
-                    <Tooltip />
-                    <Legend />
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
+                  {"Career Points per Game"}
+                </h2>
+                <LineChart
+                  width={500}
+                  height={300}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 40]} />
+                  <Tooltip />
+                  <Legend />
+                  {playerCareerStatsData.map((playerStats, index) => (
                     <Line
+                      key={playerStats.name}
                       type="monotone"
                       dataKey={selectedStat}
-                      stroke="#8884d8"
+                      data={playerStats.stats}
+                      name={playerStats.name}
+                      stroke={colors[index % colors.length]}
                       activeDot={{ r: 8 }}
                     />
-                  </LineChart>
-                </div>
-              ))
+                  ))}
+                </LineChart>
+              </div>
             ) : (
               <div className="w-[500px] h-[300px] flex justify-center items-center">
                 Add a player to visualize their stats

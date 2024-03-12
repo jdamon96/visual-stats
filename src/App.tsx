@@ -11,7 +11,19 @@ import {
 import PlayerList from "./components/PlayerList";
 import { Card } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Ellipsis, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogClose } from "@radix-ui/react-dialog";
+import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
+import { Label } from "./components/ui/label";
 
 interface ChartData {
   date: string;
@@ -174,9 +186,40 @@ function App() {
               <Loader2 className="h-8 w-8 animate-spin" />
             ) : playerCareerStatsData !== null ? (
               <div>
-                <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
-                  {"Career Points per Game"}
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
+                    {`Career ${selectedStat} per game`}
+                  </h2>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="">
+                        <Ellipsis className="h-6 w-6" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Select Display Option</DialogTitle>
+                      </DialogHeader>
+                      <RadioGroup defaultValue="year">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="year" id="year" />
+                          <Label htmlFor="year">Year</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="season" id="season" />
+                          <Label htmlFor="season">Player Season Number</Label>
+                        </div>
+                      </RadioGroup>
+                      <DialogFooter className="sm:justify-start">
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary">
+                            Close
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <LineChart
                   width={500}
                   height={300}
@@ -192,17 +235,20 @@ function App() {
                   <YAxis domain={[0, 40]} />
                   <Tooltip />
                   <Legend />
-                  {playerCareerStatsData.map((playerStats, index) => (
-                    <Line
-                      key={playerStats.name}
-                      type="monotone"
-                      dataKey={selectedStat}
-                      data={playerStats.stats}
-                      name={playerStats.name}
-                      stroke={colors[index % colors.length]}
-                      activeDot={{ r: 8 }}
-                    />
-                  ))}
+                  {playerCareerStatsData.map((playerStats, index) => {
+                    console.log(playerStats.stats, playerStats.name);
+                    return (
+                      <Line
+                        key={playerStats.name}
+                        type="monotone"
+                        dataKey={selectedStat}
+                        data={playerStats.stats}
+                        name={playerStats.name}
+                        stroke={colors[index % colors.length]}
+                        activeDot={{ r: 8 }}
+                      />
+                    );
+                  })}
                 </LineChart>
               </div>
             ) : (

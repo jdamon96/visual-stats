@@ -51,8 +51,10 @@ function App() {
   ): PlayerStats[] {
     // Collect all unique seasons from all players
     const allSeasons = new Set<string>();
+
     playerCareerStatsData?.forEach((player) => {
       player.stats.forEach((stat) => {
+        console.log(`adding season: ${stat.date} to all seasons`);
         allSeasons.add(stat.date);
       });
     });
@@ -74,29 +76,16 @@ function App() {
           });
         }
       });
-      // Print pre-sorted stats
-      console.log(`Pre-sorted stats for player: ${player.name}`, player.stats);
-      // Sort stats by date to maintain consistency
-      console.log(`Sorting stats by date for player: ${player.name}`);
-      player.stats.sort((a, b) => a.date.localeCompare(b.date));
-      // Print post-sorted stats
-      console.log(`Post-sorted stats for player: ${player.name}`, player.stats);
-      console.log(`Finished processing player: ${player.name}`);
     });
 
     return playerCareerStatsData;
   }
   const getCareerStats = async () => {
-    console.log("getCareerStats function started");
-    setIsLoading(true);
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    console.log("Active tab queried: ", tab);
 
     const playerPageRegex =
       /https:\/\/www\.basketball-reference\.com\/players\/[a-z]\/[a-z]+[0-9]+\.html/;
     if (!playerPageRegex.test(tab.url!)) {
-      console.log("URL does not match player page regex, exiting function");
-      setIsLoading(false);
       return;
     }
 
@@ -202,15 +191,13 @@ function App() {
         },
       })
       .then(async (results) => {
-        console.log("Processing results: ", results);
         const playerStats = (results && results[0]?.result) || null;
 
         if (playerStats) {
-          console.log("Player stats found: ", playerStats);
           let allPlayerStatsObj = await chrome.storage.local.get(
             "allPlayerStats"
           );
-          console.log("All player stats object: ", allPlayerStatsObj);
+
           let allPlayerStats = allPlayerStatsObj.allPlayerStats
             ? allPlayerStatsObj.allPlayerStats
             : [];
@@ -219,18 +206,14 @@ function App() {
           const playerExists = allPlayerStats.some(
             (player: PlayerStats) => player.name === playerStats.name
           );
-          console.log("Player exists: ", playerExists);
 
           // Only add player if they don't already exist in the array
           if (!playerExists) {
-            console.log("Adding new player to the stats");
             allPlayerStats.push(playerStats);
             await chrome.storage.local.set({ allPlayerStats });
             setPlayerCareerStatsData(allPlayerStats);
           }
         }
-        setIsLoading(false);
-        console.log("Loading status set to false");
       });
   };
 
@@ -281,9 +264,7 @@ function App() {
       <div className="flex flex-col space-y-6">
         <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
           <div className="flex items-center justify-center">
-            {isLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin" />
-            ) : playerCareerStatsData !== null ? (
+            {playerCareerStatsData !== null ? (
               <div>
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
@@ -330,7 +311,7 @@ function App() {
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="date" allowDuplicatedCategory={false} />
                   <YAxis domain={[0, 40]} />
                   <Tooltip />
                   <Legend />
@@ -340,7 +321,7 @@ function App() {
                       <Line
                         key={playerStats.id}
                         hide={playerStats.hideStatus}
-                        type="monotone"
+                        type="natural"
                         dataKey={selectedStat}
                         data={playerStats.stats}
                         name={playerStats.name}

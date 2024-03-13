@@ -46,6 +46,7 @@ function App() {
   >(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedStat, setSelectedStat] = useState<string>("points");
+
   function normalizePlayerStats(
     playerCareerStatsData: PlayerStats[]
   ): PlayerStats[] {
@@ -76,10 +77,36 @@ function App() {
           });
         }
       });
+
+      // Sort the player's stats array by date after adding missing seasons
+      player.stats.sort((a, b) => a.date.localeCompare(b.date));
     });
+
+    // Prune seasons that no player has stats for
+    // const seasonsWithStats = new Set<string>();
+    // playerCareerStatsData?.forEach((player) => {
+    //   player.stats.forEach((stat) => {
+    //     if (
+    //       stat.points !== null ||
+    //       stat.assists !== null ||
+    //       stat.rebounds !== null
+    //     ) {
+    //       seasonsWithStats.add(stat.date);
+    //     }
+    //   });
+    // });
+
+    // allSeasons.forEach((season) => {
+    //   if (!seasonsWithStats.has(season)) {
+    //     playerCareerStatsData?.forEach((player) => {
+    //       player.stats = player.stats.filter((stat) => stat.date !== season);
+    //     });
+    //   }
+    // });
 
     return playerCareerStatsData;
   }
+
   const getCareerStats = async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -221,8 +248,10 @@ function App() {
     const updatedPlayerStats = (playerCareerStatsData || []).filter(
       (player) => player.id !== playerId
     );
-    setPlayerCareerStatsData(updatedPlayerStats);
-    chrome.storage.local.set({ allPlayerStats: updatedPlayerStats });
+    const normalizedUpdatedPlayerStats =
+      normalizePlayerStats(updatedPlayerStats);
+    setPlayerCareerStatsData(normalizedUpdatedPlayerStats);
+    chrome.storage.local.set({ allPlayerStats: normalizedUpdatedPlayerStats });
   };
 
   const togglePlayerLineVisibility = (playerId: string) => {

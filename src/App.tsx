@@ -15,7 +15,6 @@ import { Ellipsis, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -24,6 +23,7 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 import { Label } from "./components/ui/label";
+import { v4 as uuidv4 } from "uuid";
 
 interface ChartData {
   date: string;
@@ -34,7 +34,9 @@ interface ChartData {
 
 export interface PlayerStats {
   name: string;
+  id: string;
   image: string;
+  hideStatus: boolean;
   stats: ChartData[];
 }
 
@@ -46,12 +48,15 @@ function App() {
   const [selectedStat, setSelectedStat] = useState<string>("points");
 
   const getCareerStats = async () => {
+    console.log("getCareerStats function started");
     setIsLoading(true);
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    console.log("Active tab queried: ", tab);
 
     const playerPageRegex =
       /https:\/\/www\.basketball-reference\.com\/players\/[a-z]\/[a-z]+[0-9]+\.html/;
     if (!playerPageRegex.test(tab.url!)) {
+      console.log("URL does not match player page regex, exiting function");
       setIsLoading(false);
       return;
     }
@@ -60,46 +65,63 @@ function App() {
       .executeScript({
         target: { tabId: tab.id! },
         func: () => {
+          console.log("Executing script in tab");
           const getPlayerName = () => {
-            return (
-              document.querySelector("div#meta h1 span")?.textContent || ""
-            );
+            const playerName =
+              document.querySelector("div#meta h1 span")?.textContent || "";
+            console.log("Player name: ", playerName);
+            return playerName;
           };
 
           const getPlayerImage = () => {
-            return (
+            const playerImage =
               document.querySelector(".media-item img")?.getAttribute("src") ||
-              ""
-            );
+              "";
+            console.log("Player image: ", playerImage);
+            return playerImage;
           };
 
           const getTable = () => {
-            return document.querySelector("#per_game");
+            const table = document.querySelector("#per_game");
+            console.log("Table element: ", table);
+            return table;
           };
 
           const getHeaderRow = (table: Element | null) => {
-            return table?.querySelector("thead tr");
+            const headerRow = table?.querySelector("thead tr");
+            console.log("Header row: ", headerRow);
+            return headerRow;
           };
 
           const getBodyRows = (table: Element | null) => {
-            return table?.querySelectorAll("tbody tr:not(.thead)");
+            const bodyRows = table?.querySelectorAll("tbody tr:not(.thead)");
+            console.log("Body rows: ", bodyRows);
+            return bodyRows;
           };
 
           const getColumnIndex = (
             columnName: string,
             headerRow: Element | null
           ) => {
-            return Array.from(headerRow?.children || []).findIndex(
+            const columnIndex = Array.from(headerRow?.children || []).findIndex(
               (th) => th.textContent === columnName
             );
+            console.log(`Column index for ${columnName}: `, columnIndex);
+            return columnIndex;
           };
 
           const getStatElement = (row: Element, index: number) => {
-            return row.querySelector(`td:nth-child(${index})`);
+            const statElement = row.querySelector(`td:nth-child(${index})`);
+            console.log(`Stat element for index ${index}: `, statElement);
+            return statElement;
           };
 
           const getStatValue = (element: Element | null) => {
-            return element ? parseFloat(element.textContent || "0") : 0;
+            const statValue = element
+              ? parseFloat(element.textContent || "0")
+              : 0;
+            console.log("Stat value: ", statValue);
+            return statValue;
           };
 
           const playerName = getPlayerName();
@@ -127,20 +149,29 @@ function App() {
             chartDataArray.push({ date, points, assists, rebounds });
           });
 
-          return {
+          const playerData = {
             name: playerName,
+            id: crypto.randomUUID(),
             image: playerImage,
+            hideStatus: false,
             stats: chartDataArray,
           };
+
+          console.log("Player Data: ", playerData);
+
+          return playerData;
         },
       })
       .then(async (results) => {
+        console.log("Processing results: ", results);
         const playerStats = (results && results[0]?.result) || null;
 
         if (playerStats) {
+          console.log("Player stats found: ", playerStats);
           let allPlayerStatsObj = await chrome.storage.local.get(
             "allPlayerStats"
           );
+          console.log("All player stats object: ", allPlayerStatsObj);
           let allPlayerStats = allPlayerStatsObj.allPlayerStats
             ? allPlayerStatsObj.allPlayerStats
             : [];
@@ -149,16 +180,38 @@ function App() {
           const playerExists = allPlayerStats.some(
             (player: PlayerStats) => player.name === playerStats.name
           );
+          console.log("Player exists: ", playerExists);
 
           // Only add player if they don't already exist in the array
           if (!playerExists) {
+            console.log("Adding new player to the stats");
             allPlayerStats.push(playerStats);
             await chrome.storage.local.set({ allPlayerStats });
             setPlayerCareerStatsData(allPlayerStats);
           }
         }
         setIsLoading(false);
+        console.log("Loading status set to false");
       });
+  };
+
+  const removePlayer = (playerId: string) => {
+    const updatedPlayerStats = (playerCareerStatsData || []).filter(
+      (player) => player.id !== playerId
+    );
+    setPlayerCareerStatsData(updatedPlayerStats);
+    chrome.storage.local.set({ allPlayerStats: updatedPlayerStats });
+  };
+
+  const togglePlayerLineVisibility = (playerId: string) => {
+    const updatedPlayerStats = (playerCareerStatsData || []).map((player) => {
+      if (player.id === playerId) {
+        player.hideStatus = !player.hideStatus;
+      }
+      return player;
+    });
+    setPlayerCareerStatsData(updatedPlayerStats);
+    chrome.storage.local.set({ allPlayerStats: updatedPlayerStats });
   };
 
   useEffect(() => {
@@ -177,17 +230,17 @@ function App() {
   ): PlayerStats[] {
     // Collect all unique seasons from all players
     const allSeasons = new Set<string>();
-    playerCareerStatsData.forEach((player) => {
+    playerCareerStatsData?.forEach((player) => {
       player.stats.forEach((stat) => {
         allSeasons.add(stat.date);
       });
     });
 
     // Ensure each player has all seasons, add missing ones with null stats
-    playerCareerStatsData.forEach((player) => {
+    playerCareerStatsData?.forEach((player) => {
       console.log(`Processing player: ${player.name}`);
       const playerSeasons = new Set(player.stats.map((stat) => stat.date));
-      allSeasons.forEach((season) => {
+      allSeasons?.forEach((season) => {
         if (!playerSeasons.has(season)) {
           console.log(
             `Adding missing season: ${season} for player: ${player.name}`
@@ -274,12 +327,13 @@ function App() {
                   <YAxis domain={[0, 40]} />
                   <Tooltip />
                   <Legend />
-                  {normalizePlayerStats(playerCareerStatsData).map(
+                  {normalizePlayerStats(playerCareerStatsData)?.map(
                     (playerStats, index) => {
                       console.log(playerStats.stats, playerStats.name);
                       return (
                         <Line
-                          key={playerStats.name}
+                          key={playerStats.id}
+                          hide={playerStats.hideStatus}
                           type="monotone"
                           dataKey={selectedStat}
                           data={playerStats.stats}
@@ -325,7 +379,11 @@ function App() {
           </div>
         </Card>
         <Card>
-          <PlayerList playerCareerStatsData={playerCareerStatsData} />
+          <PlayerList
+            playerCareerStatsData={playerCareerStatsData}
+            removePlayer={removePlayer}
+            togglePlayerLineVisibility={togglePlayerLineVisibility}
+          />
         </Card>
       </div>
     </div>

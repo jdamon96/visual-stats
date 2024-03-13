@@ -46,7 +46,46 @@ function App() {
   >(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedStat, setSelectedStat] = useState<string>("points");
+  function normalizePlayerStats(
+    playerCareerStatsData: PlayerStats[]
+  ): PlayerStats[] {
+    // Collect all unique seasons from all players
+    const allSeasons = new Set<string>();
+    playerCareerStatsData?.forEach((player) => {
+      player.stats.forEach((stat) => {
+        allSeasons.add(stat.date);
+      });
+    });
 
+    // Ensure each player has all seasons, add missing ones with null stats
+    playerCareerStatsData?.forEach((player) => {
+      console.log(`Processing player: ${player.name}`);
+      const playerSeasons = new Set(player.stats.map((stat) => stat.date));
+      allSeasons?.forEach((season) => {
+        if (!playerSeasons.has(season)) {
+          console.log(
+            `Adding missing season: ${season} for player: ${player.name}`
+          );
+          player.stats.push({
+            assists: null,
+            date: season,
+            points: null,
+            rebounds: null,
+          });
+        }
+      });
+      // Print pre-sorted stats
+      console.log(`Pre-sorted stats for player: ${player.name}`, player.stats);
+      // Sort stats by date to maintain consistency
+      console.log(`Sorting stats by date for player: ${player.name}`);
+      player.stats.sort((a, b) => a.date.localeCompare(b.date));
+      // Print post-sorted stats
+      console.log(`Post-sorted stats for player: ${player.name}`, player.stats);
+      console.log(`Finished processing player: ${player.name}`);
+    });
+
+    return playerCareerStatsData;
+  }
   const getCareerStats = async () => {
     console.log("getCareerStats function started");
     setIsLoading(true);
@@ -225,46 +264,14 @@ function App() {
     });
   }, []);
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#6a5acd"]; // Add more colors if needed
-  function normalizePlayerStats(
-    playerCareerStatsData: PlayerStats[]
-  ): PlayerStats[] {
-    // Collect all unique seasons from all players
-    const allSeasons = new Set<string>();
-    playerCareerStatsData?.forEach((player) => {
-      player.stats.forEach((stat) => {
-        allSeasons.add(stat.date);
-      });
-    });
+  const [normalizedPlayerStats, setNormalizedPlayerStats] = useState(
+    normalizePlayerStats(playerCareerStatsData || [])
+  );
 
-    // Ensure each player has all seasons, add missing ones with null stats
-    playerCareerStatsData?.forEach((player) => {
-      console.log(`Processing player: ${player.name}`);
-      const playerSeasons = new Set(player.stats.map((stat) => stat.date));
-      allSeasons?.forEach((season) => {
-        if (!playerSeasons.has(season)) {
-          console.log(
-            `Adding missing season: ${season} for player: ${player.name}`
-          );
-          player.stats.push({
-            assists: null,
-            date: season,
-            points: null,
-            rebounds: null,
-          });
-        }
-      });
-      // Print pre-sorted stats
-      console.log(`Pre-sorted stats for player: ${player.name}`, player.stats);
-      // Sort stats by date to maintain consistency
-      console.log(`Sorting stats by date for player: ${player.name}`);
-      player.stats.sort((a, b) => a.date.localeCompare(b.date));
-      // Print post-sorted stats
-      console.log(`Post-sorted stats for player: ${player.name}`, player.stats);
-      console.log(`Finished processing player: ${player.name}`);
-    });
+  useEffect(() => {
+    setNormalizedPlayerStats(normalizePlayerStats(playerCareerStatsData || []));
+  }, [playerCareerStatsData]);
 
-    return playerCareerStatsData;
-  }
   return (
     <div className="p-4">
       <div className="flex items-center justify-between">
@@ -327,23 +334,21 @@ function App() {
                   <YAxis domain={[0, 40]} />
                   <Tooltip />
                   <Legend />
-                  {normalizePlayerStats(playerCareerStatsData)?.map(
-                    (playerStats, index) => {
-                      console.log(playerStats.stats, playerStats.name);
-                      return (
-                        <Line
-                          key={playerStats.id}
-                          hide={playerStats.hideStatus}
-                          type="monotone"
-                          dataKey={selectedStat}
-                          data={playerStats.stats}
-                          name={playerStats.name}
-                          stroke={colors[index % colors.length]}
-                          activeDot={{ r: 8 }}
-                        />
-                      );
-                    }
-                  )}
+                  {normalizedPlayerStats?.map((playerStats, index) => {
+                    console.log(playerStats.stats, playerStats.name);
+                    return (
+                      <Line
+                        key={playerStats.id}
+                        hide={playerStats.hideStatus}
+                        type="monotone"
+                        dataKey={selectedStat}
+                        data={playerStats.stats}
+                        name={playerStats.name}
+                        stroke={colors[index % colors.length]}
+                        activeDot={{ r: 8 }}
+                      />
+                    );
+                  })}
                 </LineChart>
               </div>
             ) : (

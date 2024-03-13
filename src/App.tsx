@@ -83,26 +83,26 @@ function App() {
     });
 
     // Prune seasons that no player has stats for
-    // const seasonsWithStats = new Set<string>();
-    // playerCareerStatsData?.forEach((player) => {
-    //   player.stats.forEach((stat) => {
-    //     if (
-    //       stat.points !== null ||
-    //       stat.assists !== null ||
-    //       stat.rebounds !== null
-    //     ) {
-    //       seasonsWithStats.add(stat.date);
-    //     }
-    //   });
-    // });
+    const seasonsWithStats = new Set<string>();
+    playerCareerStatsData?.forEach((player) => {
+      player.stats.forEach((stat) => {
+        if (
+          stat.points !== null ||
+          stat.assists !== null ||
+          stat.rebounds !== null
+        ) {
+          seasonsWithStats.add(stat.date);
+        }
+      });
+    });
 
-    // allSeasons.forEach((season) => {
-    //   if (!seasonsWithStats.has(season)) {
-    //     playerCareerStatsData?.forEach((player) => {
-    //       player.stats = player.stats.filter((stat) => stat.date !== season);
-    //     });
-    //   }
-    // });
+    allSeasons.forEach((season) => {
+      if (!seasonsWithStats.has(season)) {
+        playerCareerStatsData?.forEach((player) => {
+          player.stats = player.stats.filter((stat) => stat.date !== season);
+        });
+      }
+    });
 
     return playerCareerStatsData;
   }

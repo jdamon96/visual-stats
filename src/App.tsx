@@ -23,7 +23,6 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 import { Label } from "./components/ui/label";
-import { v4 as uuidv4 } from "uuid";
 
 interface ChartData {
   date: string;
@@ -55,20 +54,15 @@ function App() {
 
     playerCareerStatsData?.forEach((player) => {
       player.stats.forEach((stat) => {
-        console.log(`adding season: ${stat.date} to all seasons`);
         allSeasons.add(stat.date);
       });
     });
 
     // Ensure each player has all seasons, add missing ones with null stats
     playerCareerStatsData?.forEach((player) => {
-      console.log(`Processing player: ${player.name}`);
       const playerSeasons = new Set(player.stats.map((stat) => stat.date));
       allSeasons?.forEach((season) => {
         if (!playerSeasons.has(season)) {
-          console.log(
-            `Adding missing season: ${season} for player: ${player.name}`
-          );
           player.stats.push({
             assists: null,
             date: season,
@@ -120,11 +114,10 @@ function App() {
       .executeScript({
         target: { tabId: tab.id! },
         func: () => {
-          console.log("Executing script in tab");
           const getPlayerName = () => {
             const playerName =
               document.querySelector("div#meta h1 span")?.textContent || "";
-            console.log("Player name: ", playerName);
+
             return playerName;
           };
 
@@ -132,25 +125,25 @@ function App() {
             const playerImage =
               document.querySelector(".media-item img")?.getAttribute("src") ||
               "";
-            console.log("Player image: ", playerImage);
+
             return playerImage;
           };
 
           const getTable = () => {
             const table = document.querySelector("#per_game");
-            console.log("Table element: ", table);
+
             return table;
           };
 
           const getHeaderRow = (table: Element | null) => {
             const headerRow = table?.querySelector("thead tr");
-            console.log("Header row: ", headerRow);
+
             return headerRow;
           };
 
           const getBodyRows = (table: Element | null) => {
             const bodyRows = table?.querySelectorAll("tbody tr:not(.thead)");
-            console.log("Body rows: ", bodyRows);
+
             return bodyRows;
           };
 
@@ -161,13 +154,13 @@ function App() {
             const columnIndex = Array.from(headerRow?.children || []).findIndex(
               (th) => th.textContent === columnName
             );
-            console.log(`Column index for ${columnName}: `, columnIndex);
+
             return columnIndex;
           };
 
           const getStatElement = (row: Element, index: number) => {
             const statElement = row.querySelector(`td:nth-child(${index})`);
-            console.log(`Stat element for index ${index}: `, statElement);
+
             return statElement;
           };
 
@@ -175,7 +168,7 @@ function App() {
             const statValue = element
               ? parseFloat(element.textContent || "0")
               : 0;
-            console.log("Stat value: ", statValue);
+
             return statValue;
           };
 
@@ -211,8 +204,6 @@ function App() {
             hideStatus: false,
             stats: chartDataArray,
           };
-
-          console.log("Player Data: ", playerData);
 
           return playerData;
         },
@@ -271,16 +262,20 @@ function App() {
 
   useEffect(() => {
     chrome.storage.local.get(["allPlayerStats"], function (result) {
-      console.log("Value currently is " + result.allPlayerStats);
       setPlayerCareerStatsData(result.allPlayerStats);
     });
   }, []);
+
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#6a5acd"]; // Add more colors if needed
   const [normalizedPlayerStats, setNormalizedPlayerStats] = useState(
     normalizePlayerStats(playerCareerStatsData || [])
   );
 
   useEffect(() => {
+    console.log(
+      `playerCareerStatsData`,
+      JSON.stringify(playerCareerStatsData, null, 2)
+    );
     setNormalizedPlayerStats(normalizePlayerStats(playerCareerStatsData || []));
   }, [playerCareerStatsData]);
 
@@ -292,43 +287,43 @@ function App() {
       </div>
       <div className="flex flex-col space-y-6">
         <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
+          <div className="w-full flex items-center justify-between py-4">
+            <h2 className="text-xl font-semibold flex items-center justify-start w-full">
+              {`Career ${selectedStat} per game`}
+            </h2>
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="cursor-pointer">
+                  <Ellipsis className="h-6 w-6" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Select Display Option</DialogTitle>
+                </DialogHeader>
+                <RadioGroup defaultValue="year">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="year" id="year" />
+                    <Label htmlFor="year">Year</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="season" id="season" />
+                    <Label htmlFor="season">Player Season Number</Label>
+                  </div>
+                </RadioGroup>
+                <DialogFooter className="sm:justify-start">
+                  <DialogClose asChild>
+                    <Button type="button" variant="secondary">
+                      Close
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
           <div className="flex items-center justify-center">
             {playerCareerStatsData !== null ? (
               <div>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center justify-center w-full">
-                    {`Career ${selectedStat} per game`}
-                  </h2>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="">
-                        <Ellipsis className="h-6 w-6" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Select Display Option</DialogTitle>
-                      </DialogHeader>
-                      <RadioGroup defaultValue="year">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="year" id="year" />
-                          <Label htmlFor="year">Year</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="season" id="season" />
-                          <Label htmlFor="season">Player Season Number</Label>
-                        </div>
-                      </RadioGroup>
-                      <DialogFooter className="sm:justify-start">
-                        <DialogClose asChild>
-                          <Button type="button" variant="secondary">
-                            Close
-                          </Button>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
                 <LineChart
                   width={500}
                   height={300}
@@ -345,7 +340,6 @@ function App() {
                   <Tooltip />
                   <Legend />
                   {normalizedPlayerStats?.map((playerStats, index) => {
-                    console.log(playerStats.stats, playerStats.name);
                     return (
                       <Line
                         key={playerStats.id}

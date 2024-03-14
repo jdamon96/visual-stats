@@ -1,5 +1,4 @@
 import { Button } from "../components/ui/button";
-import { AvatarImage, AvatarFallback, Avatar } from "../components/ui/avatar";
 import { EyeIcon, EyeOffIcon, Trash } from "lucide-react";
 import { PlayerStats } from "@/App";
 
@@ -23,26 +22,14 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
   return (
     <div className="flex items-center justify-between mt-4">
       <div className="flex items-center justify-center">
-        <Avatar>
-          <AvatarImage
-            alt={playerName}
-            // src={avatarImgSrcUrl}
-            asChild
-          >
-            <img
-              src={avatarImgSrcUrl}
-              alt={playerName}
-              style={{ objectFit: "cover", height: "100%", width: "100%" }}
-            />
-          </AvatarImage>
-          <AvatarFallback>
-            {playerName
-              .split(" ")
-              .map((name) => name[0])
-              .join("")}
-          </AvatarFallback>
-        </Avatar>
-        <span className="ml-2">{playerName}</span>
+        <div className="h-16 w-16 rounded-full border-gray-300 border-2 overflow-hidden">
+          <img
+            src={avatarImgSrcUrl}
+            alt="Player Avatar"
+            className="transform -translate-y-4 scale-[0.65] object-cover object-top"
+          />
+        </div>
+        <span className="ml-2 font-semibold text-lg">{playerName}</span>
       </div>
       <div className="flex space-x-2">
         <Button

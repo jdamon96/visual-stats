@@ -288,195 +288,210 @@ function App() {
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold mb-6">Visual Stats</h1>
+      <div className="flex items-center justify-between pb-4">
+        <h1 className="text-3xl font-bold">Visual Stats</h1>
         <Button className="bg-orange-500 text-white" onClick={getCareerStats}>
           Add Player
         </Button>
       </div>
+
       <div className="flex flex-col space-y-6">
         <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
-          <div className="w-full flex items-center justify-between pb-4 pt-2 px-4">
-            <h2 className="text-xl font-semibold flex items-center justify-start w-full">
-              {`Career ${selectedStat} per game`}
-            </h2>
-            <div className="flex items-center justify-center space-x-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="p-2" variant={"outline"}>
-                    <Share className="h-4 w-4 text-gray-500" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader className="border-b border-gray-200">
-                    <DialogTitle className="pb-4">Share Your Chart</DialogTitle>
-                  </DialogHeader>
-                  <div className="pb-4 border-b border-gray-200">
-                    <div className="h-[450px] w-full flex items-center justify-center">
-                      chart goes here
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-500">
-                        Background
-                      </label>
-                      <div className="flex space-x-2">
-                        <Button
-                          className="h-4 w-4 bg-red-500 rounded-full"
-                          onClick={() => console.log("Red background selected")}
-                        />
-                        <button
-                          className="h-4 w-4 bg-green-500 rounded-full"
-                          onClick={() =>
-                            console.log("Green background selected")
-                          }
-                        />
-                        <button
-                          className="h-4 w-4 bg-orange-500 rounded-full"
-                          onClick={() =>
-                            console.log("Blue background selected")
-                          }
-                        />
+          {playerCareerStatsData !== null &&
+          playerCareerStatsData !== undefined &&
+          playerCareerStatsData.length !== 0 ? (
+            <>
+              <div className="w-full flex items-center justify-between pb-4 pt-2 px-4">
+                <h2 className="text-xl font-semibold flex items-center justify-start w-full">
+                  {`Career ${selectedStat} per game`}
+                </h2>
+                <div className="flex items-center justify-center space-x-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="p-2" variant={"outline"}>
+                        <Share className="h-4 w-4 text-gray-500" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader className="border-b border-gray-200">
+                        <DialogTitle className="pb-4">
+                          Download Your Chart
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="pb-4 border-b border-gray-200">
+                        <div className="h-[450px] w-full flex items-center justify-center">
+                          chart goes here
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-500">
+                            Background
+                          </label>
+                          <div className="flex space-x-2">
+                            <Button
+                              className="h-4 w-4 bg-red-500 rounded-full"
+                              onClick={() =>
+                                console.log("Red background selected")
+                              }
+                            />
+                            <button
+                              className="h-4 w-4 bg-green-500 rounded-full"
+                              onClick={() =>
+                                console.log("Green background selected")
+                              }
+                            />
+                            <button
+                              className="h-4 w-4 bg-orange-500 rounded-full"
+                              onClick={() =>
+                                console.log("Blue background selected")
+                              }
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <DialogFooter className="flex justify-between items-center">
-                    <div className="flex space-x-2">
-                      <Button className="p-2" variant="outline">
-                        <LinkIcon className="w-4 h-4" />
+                      <DialogFooter className="flex justify-between items-center">
+                        <Button
+                          className="w-full bg-orange-500 text-white"
+                          variant="default"
+                        >
+                          Download
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="p-2" variant={"outline"}>
+                        <Ellipsis className="h-4 w-4 text-gray-500" />
                       </Button>
-                      <Button className="p-2" variant="outline">
-                        {/* <FacebookIcon className="w-6 h-6" /> */}fb
-                      </Button>
-                      <Button className="p-2" variant="outline">
-                        {/* <TwitterIcon className="w-6 h-6" /> */}x
-                      </Button>
-                      <Button className="p-2" variant="outline">
-                        {/* <LinkedinIcon className="w-6 h-6" /> */}ln
-                      </Button>
-                    </div>
-                    <Button
-                      className="w-full bg-orange-500 text-white"
-                      variant="default"
-                    >
-                      Download
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="p-2" variant={"outline"}>
-                    <Ellipsis className="h-4 w-4 text-gray-500" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Select Display Option</DialogTitle>
-                  </DialogHeader>
-                  <RadioGroup defaultValue="year">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="year" id="year" />
-                      <Label htmlFor="year">Year</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="season" id="season" />
-                      <Label htmlFor="season">Player Season Number</Label>
-                    </div>
-                  </RadioGroup>
-                  <DialogFooter className="sm:justify-start">
-                    <DialogClose asChild>
-                      <Button type="button" variant="secondary">
-                        Close
-                      </Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          <div className="flex items-center justify-center">
-            {playerCareerStatsData !== null ? (
-              <div>
-                <LineChart
-                  width={500}
-                  height={300}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Select Display Option</DialogTitle>
+                      </DialogHeader>
+                      <RadioGroup defaultValue="year">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="year" id="year" />
+                          <Label htmlFor="year">Year</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="season" id="season" />
+                          <Label htmlFor="season">Player Season Number</Label>
+                        </div>
+                      </RadioGroup>
+                      <DialogFooter className="sm:justify-start">
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary">
+                            Close
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <div className="flex items-center justify-center">
+                <div>
+                  <LineChart
+                    width={500}
+                    height={300}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      allowDuplicatedCategory={false}
+                      axisLine={{ stroke: "gray" }}
+                    />
+                    <YAxis domain={[0, 40]} axisLine={false} />
+                    <Tooltip />
+                    <Legend />
+                    {normalizedPlayerStats?.map((playerStats, index) => {
+                      return (
+                        <Line
+                          key={playerStats.id}
+                          hide={playerStats.hideStatus}
+                          dot={false}
+                          type="natural"
+                          dataKey={selectedStat}
+                          data={playerStats.stats}
+                          name={playerStats.name}
+                          stroke={colors[index % colors.length]}
+                          strokeWidth={3}
+                          // activeDot={{ r: 8 }}
+                        />
+                      );
+                    })}
+                  </LineChart>
+                </div>
+                )
+              </div>
+              <div className="flex items-center justify-center space-x-2">
+                <Button
+                  onClick={() => setSelectedStat("points")}
+                  variant={"secondary"}
+                  className={
+                    selectedStat === "points" ? "bg-orange-500 text-white" : ""
+                  }
                 >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    allowDuplicatedCategory={false}
-                    axisLine={{ stroke: "gray" }}
-                  />
-                  <YAxis domain={[0, 40]} axisLine={false} />
-                  <Tooltip />
-                  <Legend />
-                  {normalizedPlayerStats?.map((playerStats, index) => {
-                    return (
-                      <Line
-                        key={playerStats.id}
-                        hide={playerStats.hideStatus}
-                        dot={false}
-                        type="natural"
-                        dataKey={selectedStat}
-                        data={playerStats.stats}
-                        name={playerStats.name}
-                        stroke={colors[index % colors.length]}
-                        strokeWidth={3}
-                        // activeDot={{ r: 8 }}
-                      />
-                    );
-                  })}
-                </LineChart>
+                  Points
+                </Button>
+                <Button
+                  onClick={() => setSelectedStat("assists")}
+                  variant={"secondary"}
+                  className={
+                    selectedStat === "assists" ? "bg-orange-500 text-white" : ""
+                  }
+                >
+                  Assists
+                </Button>
+                <Button
+                  onClick={() => setSelectedStat("rebounds")}
+                  variant={"secondary"}
+                  className={
+                    selectedStat === "rebounds"
+                      ? "bg-orange-500 text-white"
+                      : ""
+                  }
+                >
+                  Rebounds
+                </Button>
               </div>
-            ) : (
-              <div className="w-[500px] h-[300px] flex justify-center items-center">
-                Add a player to visualize their stats
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-center space-x-2">
-            <Button
-              onClick={() => setSelectedStat("points")}
-              variant={"secondary"}
-              className={
-                selectedStat === "points" ? "bg-orange-500 text-white" : ""
-              }
-            >
-              Points
-            </Button>
-            <Button
-              onClick={() => setSelectedStat("assists")}
-              variant={"secondary"}
-              className={
-                selectedStat === "assists" ? "bg-orange-500 text-white" : ""
-              }
-            >
-              Assists
-            </Button>
-            <Button
-              onClick={() => setSelectedStat("rebounds")}
-              variant={"secondary"}
-              className={
-                selectedStat === "rebounds" ? "bg-orange-500 text-white" : ""
-              }
-            >
-              Rebounds
-            </Button>
-          </div>
+            </>
+          ) : (
+            <div className="w-full h-[300px] flex flex-col space-y-2 justify-center items-center">
+              <p className="text-lg text-center">
+                Go to a player's basketball reference page and click "Add
+                Player" to get started.
+              </p>
+              <p className="text-lg text-center">
+                For example, try with{" "}
+                <a
+                  href="https://www.basketball-reference.com/players/j/jamesle01.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "blue", textDecoration: "underline" }}
+                >
+                  LeBron James
+                </a>
+              </p>
+            </div>
+          )}
         </Card>
-        <Card>
-          <PlayerList
-            playerCareerStatsData={playerCareerStatsData}
-            removePlayer={removePlayer}
-            togglePlayerLineVisibility={togglePlayerLineVisibility}
-          />
-        </Card>
+        {playerCareerStatsData !== null &&
+          playerCareerStatsData !== undefined && (
+            <Card>
+              <PlayerList
+                playerCareerStatsData={playerCareerStatsData}
+                removePlayer={removePlayer}
+                togglePlayerLineVisibility={togglePlayerLineVisibility}
+              />
+            </Card>
+          )}
       </div>
     </div>
   );

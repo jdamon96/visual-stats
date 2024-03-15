@@ -30,6 +30,7 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 import { Label } from "./components/ui/label";
+import { useCurrentPng } from "recharts-to-png";
 
 interface ChartData {
   date: string;
@@ -50,9 +51,10 @@ function App() {
   const [playerCareerStatsData, setPlayerCareerStatsData] = useState<
     PlayerStats[] | null
   >(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedStat, setSelectedStat] = useState<string>("points");
 
+  const [selectedStat, setSelectedStat] = useState<string>("points");
+  const [getPng, { ref: chartRef }] = useCurrentPng();
+  const [exportedPng, setExportedPng] = useState<string | null>(null);
   function normalizePlayerStats(
     playerCareerStatsData: PlayerStats[]
   ): PlayerStats[] {
@@ -308,7 +310,17 @@ function App() {
                 <div className="flex items-center justify-center space-x-2">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="p-2" variant={"outline"}>
+                      <Button
+                        className="p-2"
+                        variant={"outline"}
+                        onClick={async () => {
+                          const png = await getPng();
+                          if (png == null) {
+                            console.log("No PNG found");
+                          }
+                          setExportedPng(png || null);
+                        }}
+                      >
                         <Share className="h-4 w-4 text-gray-500" />
                       </Button>
                     </DialogTrigger>
@@ -320,7 +332,11 @@ function App() {
                       </DialogHeader>
                       <div className="pb-4 border-b border-gray-200">
                         <div className="h-[450px] w-full flex items-center justify-center">
-                          chart goes here
+                          {exportedPng ? (
+                            <img src={exportedPng} alt="Exported Chart" />
+                          ) : (
+                            <p>Loading...</p>
+                          )}
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">
@@ -400,6 +416,7 @@ function App() {
                       left: 20,
                       bottom: 5,
                     }}
+                    ref={chartRef}
                   >
                     <CartesianGrid vertical={false} />
                     <XAxis

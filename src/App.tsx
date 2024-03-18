@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart,
   Line,
@@ -24,7 +24,8 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 import { Label } from "./components/ui/label";
-import { useCurrentPng } from "recharts-to-png";
+// import { useCurrentPng } from "recharts-to-png";
+import html2canvas from "html2canvas-pro";
 
 interface ChartData {
   date: string;
@@ -47,11 +48,20 @@ function App() {
   >(null);
 
   const [selectedStat, setSelectedStat] = useState<string>("points");
-  const [getPng, { ref: chartRef }] = useCurrentPng({
-    allowTaint: true,
-    scale: 4,
-  });
+  const chartRef = useRef<HTMLDivElement>(null);
   const [exportedPng, setExportedPng] = useState<string | null>(null);
+
+  const setPng = async () => {
+    if (chartRef.current) {
+      const canvas = await html2canvas(chartRef.current, {
+        allowTaint: true,
+        scale: 4,
+      });
+      const png = canvas.toDataURL("image/png", 1.0);
+      setExportedPng(png);
+    }
+  };
+
   function normalizePlayerStats(
     playerCareerStatsData: PlayerStats[]
   ): PlayerStats[] {
@@ -339,6 +349,19 @@ function App() {
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   </div>
+                  {/* <div
+                    className="h-8 w-8 rounded-full border-2"
+                    style={{
+                      borderColor: entry.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundSize: "cover", // Ensures the image covers the area without distorting ratio
+                      backgroundImage: `url(${playerImgUrl})`, // Your image url
+                      backgroundPosition: "center", // Centers the background image
+                    }}
+                    title={entry.payload.name} // alt text equivalent for divs
+                  ></div> */}
                   <span style={{ color: entry.color }}>
                     {entry.payload.name}
                   </span>
@@ -377,11 +400,7 @@ function App() {
                         className="p-2"
                         variant={"outline"}
                         onClick={async () => {
-                          const png = await getPng();
-                          if (png == null) {
-                            console.log("No PNG found");
-                          }
-                          setExportedPng(png || null);
+                          const png = await setPng();
                         }}
                       >
                         <Download className="h-4 w-4 text-gray-500" />
@@ -469,9 +488,8 @@ function App() {
                 </div>
               </div>
               <div className="w-full">
-                <ResponsiveContainer height={400} width="100%">
+                <ResponsiveContainer height={400} width="100%" ref={chartRef}>
                   <LineChart
-                    ref={chartRef}
                     margin={{
                       top: 0,
                       right: 0,

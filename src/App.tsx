@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -7,18 +7,12 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ResponsiveContainer,
 } from "recharts";
 import PlayerList from "./components/PlayerList";
 import { Card } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import {
-  Ellipsis,
-  LinkIcon,
-  Loader2,
-  PaletteIcon,
-  Share,
-  Share2Icon,
-} from "lucide-react";
+import { Download, Ellipsis } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -53,7 +47,10 @@ function App() {
   >(null);
 
   const [selectedStat, setSelectedStat] = useState<string>("points");
-  const [getPng, { ref: chartRef }] = useCurrentPng();
+  const [getPng, { ref: chartRef }] = useCurrentPng({
+    allowTaint: true,
+    scale: 4,
+  });
   const [exportedPng, setExportedPng] = useState<string | null>(null);
   function normalizePlayerStats(
     playerCareerStatsData: PlayerStats[]
@@ -288,6 +285,72 @@ function App() {
     setNormalizedPlayerStats(normalizePlayerStats(playerCareerStatsData || []));
   }, [playerCareerStatsData]);
 
+  const getPlayerImgUrl = (
+    playerName: string,
+    playerCareerStatsData: PlayerStats[] | null
+  ) => {
+    if (playerCareerStatsData) {
+      const player = playerCareerStatsData.find(
+        (player) => player.name === playerName
+      );
+      return player?.image;
+    }
+  };
+
+  //@ts-ignore
+  const renderLegend = useMemo(() => {
+    //@ts-ignore
+    return (props) => {
+      const { payload } = props;
+      console.log(JSON.stringify(payload, null, 2));
+
+      return (
+        <div className="flex w-full items-center justify-center space-x-2">
+          {payload.map(
+            (
+              entry: {
+                color: string;
+                payload: { image: string; name: string };
+              },
+              index: number
+            ) => {
+              const playerImgUrl = getPlayerImgUrl(
+                entry.payload.name,
+                playerCareerStatsData
+              );
+
+              return (
+                <div
+                  key={`item-${index}`}
+                  className="flex items-center space-x-2"
+                >
+                  <div
+                    className="h-8 w-8 rounded-full border-2"
+                    style={{
+                      borderColor: entry.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <img
+                      src={playerImgUrl}
+                      alt={entry.payload.name}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  </div>
+                  <span style={{ color: entry.color }}>
+                    {entry.payload.name}
+                  </span>
+                </div>
+              );
+            }
+          )}
+        </div>
+      );
+    };
+  }, [playerCareerStatsData]);
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between pb-4">
@@ -321,7 +384,7 @@ function App() {
                           setExportedPng(png || null);
                         }}
                       >
-                        <Share className="h-4 w-4 text-gray-500" />
+                        <Download className="h-4 w-4 text-gray-500" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
@@ -405,18 +468,16 @@ function App() {
                   </Dialog>
                 </div>
               </div>
-              <div className="flex items-center justify-center">
-                <div>
+              <div className="w-full">
+                <ResponsiveContainer height={400} width="100%">
                   <LineChart
-                    width={500}
-                    height={300}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
                     ref={chartRef}
+                    margin={{
+                      top: 0,
+                      right: 0,
+                      left: 0,
+                      bottom: 0,
+                    }}
                   >
                     <CartesianGrid vertical={false} />
                     <XAxis
@@ -424,9 +485,18 @@ function App() {
                       allowDuplicatedCategory={false}
                       axisLine={{ stroke: "gray" }}
                     />
-                    <YAxis domain={[0, 40]} axisLine={false} />
+                    <YAxis
+                      domain={
+                        selectedStat === "points"
+                          ? [0, 40]
+                          : selectedStat === "assists"
+                          ? [0, 20]
+                          : [0, 30]
+                      }
+                      axisLine={false}
+                    />
                     <Tooltip />
-                    <Legend />
+                    <Legend content={renderLegend} />
                     {normalizedPlayerStats?.map((playerStats, index) => {
                       return (
                         <Line
@@ -444,8 +514,7 @@ function App() {
                       );
                     })}
                   </LineChart>
-                </div>
-                )
+                </ResponsiveContainer>
               </div>
               <div className="flex items-center justify-center space-x-2">
                 <Button

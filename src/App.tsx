@@ -24,7 +24,6 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 import { Label } from "./components/ui/label";
-// import { useCurrentPng } from "recharts-to-png";
 import html2canvas from "html2canvas-pro";
 
 interface ChartData {
@@ -315,7 +314,7 @@ function App() {
       console.log(JSON.stringify(payload, null, 2));
 
       return (
-        <div className="flex w-full items-center justify-center space-x-2">
+        <div className="flex w-full items-center justify-center space-x-2 py-4">
           {payload.map(
             (
               entry: {
@@ -349,19 +348,6 @@ function App() {
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   </div>
-                  {/* <div
-                    className="h-8 w-8 rounded-full border-2"
-                    style={{
-                      borderColor: entry.color,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundSize: "cover", // Ensures the image covers the area without distorting ratio
-                      backgroundImage: `url(${playerImgUrl})`, // Your image url
-                      backgroundPosition: "center", // Centers the background image
-                    }}
-                    title={entry.payload.name} // alt text equivalent for divs
-                  ></div> */}
                   <span style={{ color: entry.color }}>
                     {entry.payload.name}
                   </span>
@@ -384,7 +370,11 @@ function App() {
       </div>
 
       <div className="flex flex-col space-y-6">
-        <Card className="flex flex-col space-y-4 p-4" title="Career Stats">
+        <Card
+          className="flex flex-col space-y-4 p-4"
+          title="Career Stats"
+          ref={chartRef}
+        >
           {playerCareerStatsData !== null &&
           playerCareerStatsData !== undefined &&
           playerCareerStatsData.length !== 0 ? (
@@ -393,7 +383,10 @@ function App() {
                 <h2 className="text-xl font-semibold flex items-center justify-start w-full">
                   {`Career ${selectedStat} per game`}
                 </h2>
-                <div className="flex items-center justify-center space-x-2">
+                <div
+                  className="flex items-center justify-center space-x-2"
+                  data-html2canvas-ignore="true"
+                >
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
@@ -487,8 +480,8 @@ function App() {
                   </Dialog>
                 </div>
               </div>
-              <div className="w-full">
-                <ResponsiveContainer height={400} width="100%" ref={chartRef}>
+              <div className="w-full -ml-4">
+                <ResponsiveContainer height={400} width="100%">
                   <LineChart
                     margin={{
                       top: 0,
@@ -527,14 +520,16 @@ function App() {
                           name={playerStats.name}
                           stroke={colors[index % colors.length]}
                           strokeWidth={3}
-                          // activeDot={{ r: 8 }}
                         />
                       );
                     })}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex items-center justify-center space-x-2">
+              <div
+                className="flex items-center justify-center space-x-2 pt-4"
+                data-html2canvas-ignore="true"
+              >
                 <Button
                   onClick={() => setSelectedStat("points")}
                   variant={"secondary"}

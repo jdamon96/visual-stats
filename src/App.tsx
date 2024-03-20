@@ -282,10 +282,6 @@ function App() {
   };
 
   useEffect(() => {
-    getCareerStats();
-  }, []);
-
-  useEffect(() => {
     chrome.storage.local.get(["allPlayerStats"], function (result) {
       setPlayerCareerStatsData(result.allPlayerStats);
     });

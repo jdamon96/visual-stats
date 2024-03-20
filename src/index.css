@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+the below CSS is to solve an issue with
+html2canvas flex alignment not working
+
+no idea why this makes it work, but it does
+
+source: https://github.com/niklasvh/html2canvas/issues/2781
+**/
+body {
+  line-height: 0.5 !important;
+}
+
+#capture_div {
+  line-height: normal;
+}

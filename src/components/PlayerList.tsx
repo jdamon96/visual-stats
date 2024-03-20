@@ -5,6 +5,7 @@ import { PlayerStats } from "@/App";
 interface PlayerListItemProps {
   avatarImgSrcUrl: string;
   playerName: string;
+  playerBballRefUrl: string;
   playerId: string;
   playerHideStatus: boolean;
   removePlayer: (playerId: string) => void;
@@ -14,6 +15,7 @@ interface PlayerListItemProps {
 const PlayerListItem: React.FC<PlayerListItemProps> = ({
   avatarImgSrcUrl,
   playerName,
+  playerBballRefUrl,
   playerId,
   playerHideStatus,
   removePlayer,
@@ -29,7 +31,12 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
             className="transform -translate-y-4 scale-[0.65] object-cover object-top"
           />
         </div>
-        <span className="ml-2 font-semibold text-lg">{playerName}</span>
+        <a
+          href={playerBballRefUrl}
+          className="ml-2 font-semibold text-lg hover:underline"
+        >
+          {playerName}
+        </a>
       </div>
       <div className="flex space-x-2">
         <Button
@@ -71,6 +78,7 @@ export default function PlayerList({
             <PlayerListItem
               avatarImgSrcUrl={playerStats.image}
               playerName={playerStats.name}
+              playerBballRefUrl={playerStats.bballRefUrl}
               playerId={playerStats.id}
               playerHideStatus={playerStats.hideStatus}
               key={playerStats.id}

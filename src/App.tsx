@@ -35,6 +35,7 @@ interface ChartData {
 
 export interface PlayerStats {
   name: string;
+  bballRefUrl: string;
   id: string;
   image: string;
   hideStatus: boolean;
@@ -198,22 +199,31 @@ function App() {
           const assistsIndex = getColumnIndex("AST", headerRow) + 1;
           const reboundsIndex = getColumnIndex("TRB", headerRow) + 1;
 
+          const processedSeasons: Set<string> = new Set();
+
           bodyRows?.forEach((row) => {
             const date =
               row.querySelector('th[data-stat="season"]')?.textContent || "";
-            const pointsElement = getStatElement(row, pointsIndex);
-            const assistsElement = getStatElement(row, assistsIndex);
-            const reboundsElement = getStatElement(row, reboundsIndex);
+            const team =
+              row.querySelector('td[data-stat="team_id"]')?.textContent || "";
 
-            const points = getStatValue(pointsElement);
-            const assists = getStatValue(assistsElement);
-            const rebounds = getStatValue(reboundsElement);
+            if (team === "TOT" || !processedSeasons.has(date)) {
+              const pointsElement = getStatElement(row, pointsIndex);
+              const assistsElement = getStatElement(row, assistsIndex);
+              const reboundsElement = getStatElement(row, reboundsIndex);
 
-            chartDataArray.push({ date, points, assists, rebounds });
+              const points = getStatValue(pointsElement);
+              const assists = getStatValue(assistsElement);
+              const rebounds = getStatValue(reboundsElement);
+
+              chartDataArray.push({ date, points, assists, rebounds });
+              processedSeasons.add(date);
+            }
           });
 
           const playerData = {
             name: playerName,
+            bballRefUrl: window.location.href,
             id: crypto.randomUUID(),
             image: playerImage,
             hideStatus: false,

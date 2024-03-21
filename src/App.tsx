@@ -106,12 +106,26 @@ function App() {
       });
     });
 
-    allSeasons.forEach((season) => {
-      if (!seasonsWithStats.has(season)) {
-        playerCareerStatsData?.forEach((player) => {
-          player.stats = player.stats.filter((stat) => stat.date !== season);
-        });
-      }
+    const prunedSeasons = Array.from(allSeasons).filter((season) =>
+      seasonsWithStats.has(season)
+    );
+
+    // Ensure each player has all pruned seasons, add missing ones with null stats
+    playerCareerStatsData?.forEach((player) => {
+      const playerSeasons = new Set(player.stats.map((stat) => stat.date));
+      prunedSeasons?.forEach((season) => {
+        if (!playerSeasons.has(season)) {
+          player.stats.push({
+            assists: null,
+            date: season,
+            points: null,
+            rebounds: null,
+          });
+        }
+      });
+
+      // Sort the player's stats array by date after adding missing seasons
+      player.stats.sort((a, b) => a.date.localeCompare(b.date));
     });
 
     return playerCareerStatsData;
@@ -202,19 +216,35 @@ function App() {
           const processedSeasons: Set<string> = new Set();
 
           bodyRows?.forEach((row) => {
-            const date =
-              row.querySelector('th[data-stat="season"]')?.textContent || "";
+            const seasonElement = row.querySelector('th[data-stat="season"]');
+            let date = "";
+
+            if (seasonElement) {
+              date = seasonElement.textContent || "";
+            } else {
+              const tdElements = row.querySelectorAll("td");
+              if (tdElements.length > 0) {
+                date = tdElements[0].textContent || "";
+              }
+            }
+
             const team =
               row.querySelector('td[data-stat="team_id"]')?.textContent || "";
 
             if (team === "TOT" || !processedSeasons.has(date)) {
-              const pointsElement = getStatElement(row, pointsIndex);
-              const assistsElement = getStatElement(row, assistsIndex);
-              const reboundsElement = getStatElement(row, reboundsIndex);
+              let points = 0;
+              let assists = 0;
+              let rebounds = 0;
 
-              const points = getStatValue(pointsElement);
-              const assists = getStatValue(assistsElement);
-              const rebounds = getStatValue(reboundsElement);
+              if (seasonElement) {
+                const pointsElement = getStatElement(row, pointsIndex);
+                const assistsElement = getStatElement(row, assistsIndex);
+                const reboundsElement = getStatElement(row, reboundsIndex);
+
+                points = getStatValue(pointsElement);
+                assists = getStatValue(assistsElement);
+                rebounds = getStatValue(reboundsElement);
+              }
 
               chartDataArray.push({ date, points, assists, rebounds });
               processedSeasons.add(date);
@@ -293,10 +323,6 @@ function App() {
   );
 
   useEffect(() => {
-    console.log(
-      `playerCareerStatsData`,
-      JSON.stringify(playerCareerStatsData, null, 2)
-    );
     setNormalizedPlayerStats(normalizePlayerStats(playerCareerStatsData || []));
   }, [playerCareerStatsData]);
 
@@ -317,7 +343,6 @@ function App() {
     //@ts-ignore
     return (props) => {
       const { payload } = props;
-      console.log(JSON.stringify(payload, null, 2));
 
       return (
         <div className="flex w-full items-center justify-center space-x-2 py-4">
@@ -418,31 +443,6 @@ function App() {
                           ) : (
                             <p>Loading...</p>
                           )}
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-500">
-                            Background
-                          </label>
-                          <div className="flex space-x-2">
-                            <Button
-                              className="h-4 w-4 bg-red-500 rounded-full"
-                              onClick={() =>
-                                console.log("Red background selected")
-                              }
-                            />
-                            <button
-                              className="h-4 w-4 bg-green-500 rounded-full"
-                              onClick={() =>
-                                console.log("Green background selected")
-                              }
-                            />
-                            <button
-                              className="h-4 w-4 bg-orange-500 rounded-full"
-                              onClick={() =>
-                                console.log("Blue background selected")
-                              }
-                            />
-                          </div>
                         </div>
                       </div>
                       <DialogFooter className="flex justify-between items-center">

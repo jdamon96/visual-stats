@@ -8,8 +8,9 @@ interface PlayerListItemProps {
   playerBballRefUrl: string;
   playerId: string;
   playerHideStatus: boolean;
-  removePlayer: (playerId: string) => void;
-  togglePlayerLineVisibility: (playerId: string) => void;
+  removePlayer: (playerId: string, displayOption: string) => void;
+  togglePlayerLineVisibility: (playerId: string, displayOption: string) => void;
+  displayOption: string;
 }
 
 const PlayerListItem: React.FC<PlayerListItemProps> = ({
@@ -20,6 +21,7 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
   playerHideStatus,
   removePlayer,
   togglePlayerLineVisibility,
+  displayOption,
 }) => {
   return (
     <div className="flex items-center justify-between mt-4">
@@ -42,7 +44,7 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
         <Button
           className=""
           variant="outline"
-          onClick={() => togglePlayerLineVisibility(playerId)}
+          onClick={() => togglePlayerLineVisibility(playerId, displayOption)}
         >
           {playerHideStatus ? (
             <EyeOffIcon className="h-4 w-4" />
@@ -50,7 +52,10 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
             <EyeIcon className="h-4 w-4" />
           )}
         </Button>
-        <Button variant="outline" onClick={() => removePlayer(playerId)}>
+        <Button
+          variant="outline"
+          onClick={() => removePlayer(playerId, displayOption)}
+        >
           <Trash className="h-4 w-4" />
         </Button>
       </div>
@@ -60,14 +65,16 @@ const PlayerListItem: React.FC<PlayerListItemProps> = ({
 
 interface PlayerListProps {
   playerCareerStatsData: PlayerStats[] | null;
-  removePlayer: (playerId: string) => void;
-  togglePlayerLineVisibility: (playerId: string) => void;
+  removePlayer: (playerId: string, displayOption: string) => void;
+  togglePlayerLineVisibility: (playerId: string, displayOption: string) => void;
+  displayOption: string;
 }
 
 export default function PlayerList({
   playerCareerStatsData,
   removePlayer,
   togglePlayerLineVisibility,
+  displayOption,
 }: PlayerListProps) {
   return (
     <div className="">
@@ -84,6 +91,7 @@ export default function PlayerList({
               key={playerStats.id}
               removePlayer={removePlayer}
               togglePlayerLineVisibility={togglePlayerLineVisibility}
+              displayOption={displayOption}
             />
           ))}
       </div>

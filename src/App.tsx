@@ -43,13 +43,11 @@ export interface PlayerStats {
 }
 
 function App() {
-  const [playerCareerStatsData, setPlayerCareerStatsData] = useState<
-    PlayerStats[] | null
-  >(null);
-
   const [selectedStat, setSelectedStat] = useState<string>("points");
   const chartRef = useRef<HTMLDivElement>(null);
   const [exportedPng, setExportedPng] = useState<string | null>(null);
+  const [playerCareerStatsDataSource, setPlayerCareerStatsDataSource] =
+    useState<PlayerStats[] | null>(null);
 
   const setPng = async () => {
     if (chartRef.current) {
@@ -62,20 +60,33 @@ function App() {
     }
   };
 
-  function normalizePlayerStats(
+  /**
+   * This function normalizes the player stats data by ensuring that each player has stats for all seasons.
+   *
+   * This is to ensure that the line chart has a consistent x-axis for all players.
+   *
+   * If a player does not have stats for a particular season, it adds a record for that season with null stats.
+   * It also prunes seasons that no player has stats for, which can occur when a player is added, the stats are normalized, and then the player is subsequently removed.
+   */
+  function normalizePlayerStatsBySeasonYear(
     playerCareerStatsData: PlayerStats[]
   ): PlayerStats[] {
+    // Make a deep copy of the input data
+    const copiedPlayerCareerStatsData: PlayerStats[] = JSON.parse(
+      JSON.stringify(playerCareerStatsData)
+    );
+
     // Collect all unique seasons from all players
     const allSeasons = new Set<string>();
 
-    playerCareerStatsData?.forEach((player) => {
+    copiedPlayerCareerStatsData?.forEach((player) => {
       player.stats.forEach((stat) => {
         allSeasons.add(stat.date);
       });
     });
 
     // Ensure each player has all seasons, add missing ones with null stats
-    playerCareerStatsData?.forEach((player) => {
+    copiedPlayerCareerStatsData?.forEach((player) => {
       const playerSeasons = new Set(player.stats.map((stat) => stat.date));
       allSeasons?.forEach((season) => {
         if (!playerSeasons.has(season)) {
@@ -94,7 +105,7 @@ function App() {
 
     // Prune seasons that no player has stats for
     const seasonsWithStats = new Set<string>();
-    playerCareerStatsData?.forEach((player) => {
+    copiedPlayerCareerStatsData?.forEach((player) => {
       player.stats.forEach((stat) => {
         if (
           stat.points !== null ||
@@ -111,7 +122,7 @@ function App() {
     );
 
     // Ensure each player has all pruned seasons, add missing ones with null stats
-    playerCareerStatsData?.forEach((player) => {
+    copiedPlayerCareerStatsData?.forEach((player) => {
       const playerSeasons = new Set(player.stats.map((stat) => stat.date));
       prunedSeasons?.forEach((season) => {
         if (!playerSeasons.has(season)) {
@@ -128,8 +139,62 @@ function App() {
       player.stats.sort((a, b) => a.date.localeCompare(b.date));
     });
 
-    return playerCareerStatsData;
+    return copiedPlayerCareerStatsData;
   }
+
+  function normalizePlayerStatsByRelativeSeasonOfCareer(
+    playerCareerStatsData: PlayerStats[]
+  ): PlayerStats[] {
+    // Make a deep copy of the input data
+    const copiedPlayerCareerStatsData: PlayerStats[] = JSON.parse(
+      JSON.stringify(playerCareerStatsData)
+    );
+
+    const maxSeasons = Math.max(
+      ...copiedPlayerCareerStatsData.map((player) => player.stats.length)
+    );
+
+    copiedPlayerCareerStatsData.forEach((player) => {
+      // Denormalize data by removing seasons with all null stats so that we start counting
+      // seasons from the first season with stats
+      player.stats = player.stats.filter(
+        (stat) =>
+          stat.points !== null ||
+          stat.assists !== null ||
+          stat.rebounds !== null
+      );
+
+      player.stats.forEach((stat, index) => {
+        stat.date = `Season ${index + 1}`;
+      });
+
+      for (let i = player.stats.length; i < maxSeasons; i++) {
+        player.stats.push({
+          assists: null,
+          date: `Season ${i + 1}`,
+          points: null,
+          rebounds: null,
+        });
+      }
+    });
+
+    return copiedPlayerCareerStatsData;
+  }
+
+  const [displayOption, setDisplayOption] = useState<string>("year");
+
+  const normalizePlayerStats = (
+    playerCareerStatsDataSource: PlayerStats[],
+    displayOption: string
+  ) => {
+    if (displayOption === "year") {
+      return normalizePlayerStatsBySeasonYear(playerCareerStatsDataSource);
+    } else {
+      return normalizePlayerStatsByRelativeSeasonOfCareer(
+        playerCareerStatsDataSource
+      );
+    }
+  };
 
   const getCareerStats = async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -284,54 +349,65 @@ function App() {
           if (!playerExists) {
             allPlayerStats.push(playerStats);
             await chrome.storage.local.set({ allPlayerStats });
-            setPlayerCareerStatsData(allPlayerStats);
+            setPlayerCareerStatsDataSource(allPlayerStats);
           }
         }
       });
   };
 
-  const removePlayer = (playerId: string) => {
-    const updatedPlayerStats = (playerCareerStatsData || []).filter(
+  const removePlayer = (playerId: string, displayOption: string) => {
+    const updatedPlayerStats = (playerCareerStatsDataSource || []).filter(
       (player) => player.id !== playerId
     );
-    const normalizedUpdatedPlayerStats =
-      normalizePlayerStats(updatedPlayerStats);
-    setPlayerCareerStatsData(normalizedUpdatedPlayerStats);
-    chrome.storage.local.set({ allPlayerStats: normalizedUpdatedPlayerStats });
+    setPlayerCareerStatsDataSource(updatedPlayerStats);
+    chrome.storage.local.set({ allPlayerStats: updatedPlayerStats });
+    setNormalizedPlayerStats(
+      normalizePlayerStats(updatedPlayerStats, displayOption)
+    );
   };
 
-  const togglePlayerLineVisibility = (playerId: string) => {
-    const updatedPlayerStats = (playerCareerStatsData || []).map((player) => {
-      if (player.id === playerId) {
-        player.hideStatus = !player.hideStatus;
+  const togglePlayerLineVisibility = (
+    playerId: string,
+    displayOption: string
+  ) => {
+    const updatedPlayerStats = (playerCareerStatsDataSource || []).map(
+      (player) => {
+        if (player.id === playerId) {
+          player.hideStatus = !player.hideStatus;
+        }
+        return player;
       }
-      return player;
-    });
-    setPlayerCareerStatsData(updatedPlayerStats);
+    );
+    setPlayerCareerStatsDataSource(updatedPlayerStats);
     chrome.storage.local.set({ allPlayerStats: updatedPlayerStats });
+    setNormalizedPlayerStats(
+      normalizePlayerStats(updatedPlayerStats, displayOption)
+    );
   };
 
   useEffect(() => {
     chrome.storage.local.get(["allPlayerStats"], function (result) {
-      setPlayerCareerStatsData(result.allPlayerStats);
+      setPlayerCareerStatsDataSource(result.allPlayerStats);
     });
   }, []);
 
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#6a5acd"]; // Add more colors if needed
   const [normalizedPlayerStats, setNormalizedPlayerStats] = useState(
-    normalizePlayerStats(playerCareerStatsData || [])
+    normalizePlayerStats(playerCareerStatsDataSource || [], displayOption)
   );
 
   useEffect(() => {
-    setNormalizedPlayerStats(normalizePlayerStats(playerCareerStatsData || []));
-  }, [playerCareerStatsData]);
+    setNormalizedPlayerStats(
+      normalizePlayerStats(playerCareerStatsDataSource || [], displayOption)
+    );
+  }, [playerCareerStatsDataSource, displayOption]);
 
   const getPlayerImgUrl = (
     playerName: string,
-    playerCareerStatsData: PlayerStats[] | null
+    playerCareerStatsDataSource: PlayerStats[] | null
   ) => {
-    if (playerCareerStatsData) {
-      const player = playerCareerStatsData.find(
+    if (playerCareerStatsDataSource) {
+      const player = playerCareerStatsDataSource.find(
         (player) => player.name === playerName
       );
       return player?.image;
@@ -356,7 +432,7 @@ function App() {
             ) => {
               const playerImgUrl = getPlayerImgUrl(
                 entry.payload.name,
-                playerCareerStatsData
+                playerCareerStatsDataSource
               );
 
               return (
@@ -389,7 +465,7 @@ function App() {
         </div>
       );
     };
-  }, [playerCareerStatsData]);
+  }, [playerCareerStatsDataSource]);
 
   return (
     <div className="p-4">
@@ -406,9 +482,9 @@ function App() {
           title="Career Stats"
           ref={chartRef}
         >
-          {playerCareerStatsData !== null &&
-          playerCareerStatsData !== undefined &&
-          playerCareerStatsData.length !== 0 ? (
+          {playerCareerStatsDataSource !== null &&
+          playerCareerStatsDataSource !== undefined &&
+          playerCareerStatsDataSource.length !== 0 ? (
             <>
               <div className="w-full flex items-center justify-between pb-4 pt-2 px-4">
                 <h2 className="text-xl font-semibold flex items-center justify-start w-full">
@@ -465,7 +541,19 @@ function App() {
                       <DialogHeader>
                         <DialogTitle>Select Display Option</DialogTitle>
                       </DialogHeader>
-                      <RadioGroup defaultValue="year">
+                      <RadioGroup
+                        value={displayOption}
+                        onValueChange={(value) => {
+                          setDisplayOption(value);
+
+                          setNormalizedPlayerStats(
+                            normalizePlayerStats(
+                              playerCareerStatsDataSource || [],
+                              displayOption
+                            )
+                          );
+                        }}
+                      >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="year" id="year" />
                           <Label htmlFor="year">Year</Label>
@@ -587,11 +675,12 @@ function App() {
             </div>
           )}
         </Card>
-        {playerCareerStatsData !== null &&
-          playerCareerStatsData !== undefined && (
+        {playerCareerStatsDataSource !== null &&
+          playerCareerStatsDataSource !== undefined && (
             <Card>
               <PlayerList
-                playerCareerStatsData={playerCareerStatsData}
+                playerCareerStatsData={playerCareerStatsDataSource}
+                displayOption={displayOption}
                 removePlayer={removePlayer}
                 togglePlayerLineVisibility={togglePlayerLineVisibility}
               />

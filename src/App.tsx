@@ -42,12 +42,32 @@ export interface PlayerStats {
   stats: ChartData[];
 }
 
+const roundUpToNearestTen = (num: number) => {
+  return Math.ceil(num / 10) * 10;
+};
+
 function App() {
   const [selectedStat, setSelectedStat] = useState<string>("points");
   const chartRef = useRef<HTMLDivElement>(null);
   const [exportedPng, setExportedPng] = useState<string | null>(null);
   const [playerCareerStatsDataSource, setPlayerCareerStatsDataSource] =
     useState<PlayerStats[] | null>(null);
+
+  const getMaxStatValue = (
+    playerStats: PlayerStats[],
+    selectedStat: string
+  ) => {
+    const maxValue = Math.max(
+      ...playerStats.map((player) =>
+        Math.max(
+          ...player.stats.map(
+            (stat) => Number(stat[selectedStat as keyof ChartData]) || 0
+          )
+        )
+      )
+    );
+    return roundUpToNearestTen(maxValue);
+  };
 
   const setPng = async () => {
     if (chartRef.current) {
@@ -455,7 +475,7 @@ function App() {
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   </div>
-                  <span style={{ color: entry.color }}>
+                  <span style={{ color: entry.color }} className="line">
                     {entry.payload.name}
                   </span>
                 </div>
@@ -575,13 +595,13 @@ function App() {
                 </div>
               </div>
               <div className="w-full -ml-4">
-                <ResponsiveContainer height={400} width="100%">
+                <ResponsiveContainer height={600} width="100%">
                   <LineChart
                     margin={{
-                      top: 0,
+                      top: 5,
                       right: 0,
                       left: 0,
-                      bottom: 0,
+                      bottom: 5,
                     }}
                   >
                     <CartesianGrid vertical={false} />
@@ -591,24 +611,21 @@ function App() {
                       axisLine={{ stroke: "gray" }}
                     />
                     <YAxis
-                      domain={
-                        selectedStat === "points"
-                          ? [0, 40]
-                          : selectedStat === "assists"
-                          ? [0, 20]
-                          : [0, 30]
-                      }
+                      domain={[
+                        0,
+                        getMaxStatValue(normalizedPlayerStats, selectedStat),
+                      ]}
                       axisLine={false}
                     />
                     <Tooltip />
-                    <Legend content={renderLegend} />
+                    <Legend content={renderLegend} className="w-full mx-auto" />
                     {normalizedPlayerStats?.map((playerStats, index) => {
                       return (
                         <Line
                           key={playerStats.id}
                           hide={playerStats.hideStatus}
                           dot={false}
-                          type="natural"
+                          type="monotone"
                           dataKey={selectedStat}
                           data={playerStats.stats}
                           name={playerStats.name}

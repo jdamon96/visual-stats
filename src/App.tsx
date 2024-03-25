@@ -80,6 +80,23 @@ function App() {
     }
   };
 
+  const makeAllSeasonsSetContinuous = (allSeasons: Set<string>) => {
+    const seasonYears = Array.from(allSeasons).map((season) =>
+      parseInt(season.split("-")[0])
+    );
+    const minSeasonYear = Math.min(...seasonYears);
+    const maxSeasonYear = Math.max(...seasonYears);
+
+    const continuousSeasons = new Set<string>();
+
+    for (let i = minSeasonYear; i <= maxSeasonYear; i++) {
+      const formattedSeason = `${i}-${(i + 1).toString().slice(-2)}`;
+      continuousSeasons.add(formattedSeason);
+    }
+
+    return continuousSeasons;
+  };
+
   /**
    * This function normalizes the player stats data by ensuring that each player has stats for all seasons.
    *
@@ -105,10 +122,16 @@ function App() {
       });
     });
 
+    console.log(`all seasons: ${JSON.stringify(allSeasons)}`);
+    // Make all seasons set continuous
+    const continuousSeasons = makeAllSeasonsSetContinuous(allSeasons);
+
+    console.log(`continuous seasons: ${JSON.stringify(continuousSeasons)}`);
+
     // Ensure each player has all seasons, add missing ones with null stats
     copiedPlayerCareerStatsData?.forEach((player) => {
       const playerSeasons = new Set(player.stats.map((stat) => stat.date));
-      allSeasons?.forEach((season) => {
+      continuousSeasons?.forEach((season) => {
         if (!playerSeasons.has(season)) {
           player.stats.push({
             assists: null,
@@ -123,41 +146,41 @@ function App() {
       player.stats.sort((a, b) => a.date.localeCompare(b.date));
     });
 
-    // Prune seasons that no player has stats for
-    const seasonsWithStats = new Set<string>();
-    copiedPlayerCareerStatsData?.forEach((player) => {
-      player.stats.forEach((stat) => {
-        if (
-          stat.points !== null ||
-          stat.assists !== null ||
-          stat.rebounds !== null
-        ) {
-          seasonsWithStats.add(stat.date);
-        }
-      });
-    });
+    // // Prune seasons that no player has stats for
+    // const seasonsWithStats = new Set<string>();
+    // copiedPlayerCareerStatsData?.forEach((player) => {
+    //   player.stats.forEach((stat) => {
+    //     if (
+    //       stat.points !== null ||
+    //       stat.assists !== null ||
+    //       stat.rebounds !== null
+    //     ) {
+    //       seasonsWithStats.add(stat.date);
+    //     }
+    //   });
+    // });
 
-    const prunedSeasons = Array.from(allSeasons).filter((season) =>
-      seasonsWithStats.has(season)
-    );
+    // const prunedSeasons = Array.from(continuousSeasons).filter((season) =>
+    //   seasonsWithStats.has(season)
+    // );
 
-    // Ensure each player has all pruned seasons, add missing ones with null stats
-    copiedPlayerCareerStatsData?.forEach((player) => {
-      const playerSeasons = new Set(player.stats.map((stat) => stat.date));
-      prunedSeasons?.forEach((season) => {
-        if (!playerSeasons.has(season)) {
-          player.stats.push({
-            assists: null,
-            date: season,
-            points: null,
-            rebounds: null,
-          });
-        }
-      });
+    // // Ensure each player has all pruned seasons, add missing ones with null stats
+    // copiedPlayerCareerStatsData?.forEach((player) => {
+    //   const playerSeasons = new Set(player.stats.map((stat) => stat.date));
+    //   prunedSeasons?.forEach((season) => {
+    //     if (!playerSeasons.has(season)) {
+    //       player.stats.push({
+    //         assists: null,
+    //         date: season,
+    //         points: null,
+    //         rebounds: null,
+    //       });
+    //     }
+    //   });
 
-      // Sort the player's stats array by date after adding missing seasons
-      player.stats.sort((a, b) => a.date.localeCompare(b.date));
-    });
+    //   // Sort the player's stats array by date after adding missing seasons
+    //   player.stats.sort((a, b) => a.date.localeCompare(b.date));
+    // });
 
     return copiedPlayerCareerStatsData;
   }

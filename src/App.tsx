@@ -12,7 +12,7 @@ import {
 import PlayerList from "./components/PlayerList";
 import { Card } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import { Download, Ellipsis } from "lucide-react";
+import { Download, Ellipsis, MessageCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,11 +47,12 @@ const roundUpToNearestTen = (num: number) => {
 };
 
 function App() {
-  const [selectedStat, setSelectedStat] = useState<string>("points");
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [exportedPng, setExportedPng] = useState<string | null>(null);
   const [playerCareerStatsDataSource, setPlayerCareerStatsDataSource] =
     useState<PlayerStats[] | null>(null);
+  const [selectedStat, setSelectedStat] = useState<string>("points");
+  const [displayOption, setDisplayOption] = useState<string>("season");
+  const [exportedPng, setExportedPng] = useState<string | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const getMaxStatValue = (
     playerStats: PlayerStats[],
@@ -145,43 +146,6 @@ function App() {
       // Sort the player's stats array by date after adding missing seasons
       player.stats.sort((a, b) => a.date.localeCompare(b.date));
     });
-
-    // // Prune seasons that no player has stats for
-    // const seasonsWithStats = new Set<string>();
-    // copiedPlayerCareerStatsData?.forEach((player) => {
-    //   player.stats.forEach((stat) => {
-    //     if (
-    //       stat.points !== null ||
-    //       stat.assists !== null ||
-    //       stat.rebounds !== null
-    //     ) {
-    //       seasonsWithStats.add(stat.date);
-    //     }
-    //   });
-    // });
-
-    // const prunedSeasons = Array.from(continuousSeasons).filter((season) =>
-    //   seasonsWithStats.has(season)
-    // );
-
-    // // Ensure each player has all pruned seasons, add missing ones with null stats
-    // copiedPlayerCareerStatsData?.forEach((player) => {
-    //   const playerSeasons = new Set(player.stats.map((stat) => stat.date));
-    //   prunedSeasons?.forEach((season) => {
-    //     if (!playerSeasons.has(season)) {
-    //       player.stats.push({
-    //         assists: null,
-    //         date: season,
-    //         points: null,
-    //         rebounds: null,
-    //       });
-    //     }
-    //   });
-
-    //   // Sort the player's stats array by date after adding missing seasons
-    //   player.stats.sort((a, b) => a.date.localeCompare(b.date));
-    // });
-
     return copiedPlayerCareerStatsData;
   }
 
@@ -223,8 +187,6 @@ function App() {
 
     return copiedPlayerCareerStatsData;
   }
-
-  const [displayOption, setDisplayOption] = useState<string>("year");
 
   const normalizePlayerStats = (
     playerCareerStatsDataSource: PlayerStats[],
@@ -464,7 +426,7 @@ function App() {
       const { payload } = props;
 
       return (
-        <div className="flex w-full items-center justify-center space-x-2 py-4">
+        <div className="flex w-full items-center justify-center space-x-2">
           {payload.map(
             (
               entry: {
@@ -498,7 +460,7 @@ function App() {
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   </div>
-                  <span style={{ color: entry.color }} className="line">
+                  <span style={{ color: entry.color }} className="text-lg">
                     {entry.payload.name}
                   </span>
                 </div>
@@ -598,12 +560,12 @@ function App() {
                         }}
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="year" id="year" />
-                          <Label htmlFor="year">Year</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
                           <RadioGroupItem value="season" id="season" />
                           <Label htmlFor="season">Player Season Number</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="year" id="year" />
+                          <Label htmlFor="year">Year</Label>
                         </div>
                       </RadioGroup>
                       <DialogFooter className="sm:justify-start">
@@ -617,14 +579,20 @@ function App() {
                   </Dialog>
                 </div>
               </div>
-              <div className="w-full -ml-4">
+              <div className="w-full">
                 <ResponsiveContainer height={600} width="100%">
                   <LineChart
                     margin={{
                       top: 5,
                       right: 0,
                       left: 0,
-                      bottom: 5,
+                      bottom: 0,
+                    }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <CartesianGrid vertical={false} />
@@ -632,6 +600,7 @@ function App() {
                       dataKey="date"
                       allowDuplicatedCategory={false}
                       axisLine={{ stroke: "gray" }}
+                      height={20}
                     />
                     <YAxis
                       domain={[
@@ -639,9 +608,21 @@ function App() {
                         getMaxStatValue(normalizedPlayerStats, selectedStat),
                       ]}
                       axisLine={false}
+                      width={20}
                     />
                     <Tooltip />
-                    <Legend content={renderLegend} className="w-full mx-auto" />
+
+                    <Legend
+                      content={renderLegend}
+                      wrapperStyle={{
+                        width: "100%",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    />
+
                     {normalizedPlayerStats?.map((playerStats, index) => {
                       return (
                         <Line
@@ -726,6 +707,18 @@ function App() {
               />
             </Card>
           )}
+        <button
+          className="bg-white border-black border w-full rounded-md flex items-center justify-center space-x-2 py-2 hover:bg-gray-100"
+          onClick={() => {
+            window.open(
+              "https://www.twitter.com/direct_messages/create/visualstats_nba",
+              "_blank"
+            );
+          }}
+        >
+          <MessageCircle className="h-6 w-6 text-black" />
+          <p className="text-lg text-black">Share Feedback</p>
+        </button>
       </div>
     </div>
   );

@@ -424,18 +424,21 @@ function App() {
     //@ts-ignore
     return (props) => {
       const { payload } = props;
+      const columns =
+        payload.length > 3 ? Math.floor(payload.length / 2) : payload.length;
 
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
-          {" "}
+        <div
+          className="grid gap-2 w-full items-center justify-center"
+          style={{
+            gridTemplateColumns: `repeat(${columns}, minmax(100px, 1fr))`,
+          }}
+        >
           {payload.map(
-            (
-              entry: {
-                color: string;
-                payload: { image: string; name: string };
-              },
-              index: number
-            ) => {
+            (entry: {
+              color: string;
+              payload: { image: string; name: string };
+            }) => {
               const playerImgUrl = getPlayerImgUrl(
                 entry.payload.name,
                 playerCareerStatsDataSource
@@ -443,8 +446,8 @@ function App() {
 
               return (
                 <div
-                  key={`item-${index}`}
-                  className="flex items-center space-x-2"
+                  key={`item-${entry.payload.name}`}
+                  className="flex items-center justify-center space-x-2"
                 >
                   <div
                     className="h-8 w-8 rounded-full border-2"
@@ -472,6 +475,15 @@ function App() {
       );
     };
   }, [playerCareerStatsDataSource]);
+
+  const downloadExportedPng = () => {
+    if (exportedPng) {
+      const link = document.createElement("a");
+      link.href = exportedPng;
+      link.download = "chart.png";
+      link.click();
+    }
+  };
 
   return (
     <div className="p-4">
@@ -531,6 +543,7 @@ function App() {
                         <Button
                           className="w-full bg-orange-500 text-white"
                           variant="default"
+                          onClick={downloadExportedPng}
                         >
                           Download
                         </Button>

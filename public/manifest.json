@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Visual Stats",
   "version": "1.0",
-  "description": "",
+  "description": "Visual Stats: See NBA players' career statistics on graphs. Compare points, assists, rebounds visually.",
   "background": {
     "service_worker": "service-worker.js"
   },

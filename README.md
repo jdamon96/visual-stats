@@ -1,30 +1,16 @@
-# React + TypeScript + Vite
+# Visual Stats Chrome Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Visual Stats is a free Chrome extension that lets users compare NBA players' career stats with interactive line charts instead of HTML tables.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Browser | Recommended Version | Store Link                                                                                                                |
+| ------- | :-----------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| Chrome  |        126+         | [Visual Stats - Chrome Web Store](https://chromewebstore.google.com/detail/visual-stats/fnopmemelgaimmjnakgndfoklpnlkafk) |
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: "latest",
-    sourceType: "module",
-    project: ["./tsconfig.json", "./tsconfig.node.json"],
-    tsconfigRootDir: __dirname,
-  },
-};
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Click "Add Player" in the extension side panel while on any NBA player's basketball reference page to load their stats into the Visual Stats extension
+- Add multiple players to compare career stats
+- Toggle between viewing career averages in points, assists, and rebounds
+- Toggle between showing players stats during their relative season in the NBA (first season, second season, etc.) or the absolute season (2022-2023 season, 2023-2024 season, etc.)
